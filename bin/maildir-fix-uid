@@ -1,0 +1,94 @@
+#!/usr/bin/env sh
+
+# Script to show and fix duplicated uid's.
+# I've regularly encountered duplicated and/or wrong uid's, especially with exchange
+# servers. This is a brute-force method to fix it, but it works.
+#
+# Changelog:
+
+# The MIT License (MIT)
+# Copyright (c) 2016 Nelo-T. wallus <nelo@wallus.de>
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+. common
+
+test $# -gt 1 || die "Unsufficient arguments, at least path and subcommand is needed"
+path=$1
+
+mails=${TMPDIR:-/tmp}/$(basename $0).tmp
+find $path -type f -not -name '.uidvalidity'  > $mails
+
+get_uids() {
+    cut -d= -f2 < $mails | \
+        cut -d: -f1
+}
+
+get_duplicate_uids() {
+    get_uids | sort -n | uniq -d
+}
+
+get_by_uid() {
+    test $# -eq 1 || die "No uid passed"
+    awk '/U='$1':/ { print $0 }' < $mails
+}
+
+fix_duplicate_uids() {
+    cur=$(get_uids | awk 'BEGIN { c=0 } { if ($0 > c) { c = $0 } } END { print c }')
+    cur=$(expr $cur + 1)
+    log info "Current maximum uid: $cur"
+
+    for uid in $(get_duplicate_uids); do
+        log info "Deduplicating uid $uid"
+
+        first=1
+        for duplicate in $(get_by_uid $uid); do
+            if test $first -eq 1; then
+                first=0
+                continue
+            fi
+
+            new=$(echo $duplicate | sed "s/U=$uid:/U=$cur:/")
+            log info "Moving mail '$duplicate' to '$new'"
+
+            mv $duplicate $new
+
+            cur=$(expr $cur + 1)
+        done
+
+    done
+}
+
+case $2 in
+    (fix)
+        case $3 in
+            (uids) fix_duplicate_uids;;
+            (*) die "Unknown subcommand: $3";;
+        esac
+        ;;
+    (duplicate)
+        case $3 in
+            (uids) get_duplicate_uids;;
+            (*) die "Unknown subcommand: $3";;
+        esac
+        ;;
+    (uids) get_uids;;
+    (uid) get_by_uid $3;;
+    (*) die "Unknown command: $2";;
+esac
