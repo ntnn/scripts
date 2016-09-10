@@ -19,3 +19,8 @@ Each file contains a header in the following form:
 
 This layout enables updating without explicitly cloning/pulling from
 git, while still being able to get an overview of the updates.
+
+If you neither want to use a cronjob to grab updates of the scripts nor
+like submodules have a look at myrepos [#myrepos]_.
+
+.. [#myrepos] https://myrepos.branchable.com/
