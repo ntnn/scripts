@@ -5,7 +5,7 @@
 # Changelog:
 #   2016-09-11  Fix assignment instead of defaulting on DEBUG and
 #               funcdepth
-#   2016-09-10  Added syslog-output log log()
+#   2016-09-10  Add syslog-output log log()
 
 # The MIT License (MIT)
 # Copyright (c) 2016 Nelo-T. wallus <nelo@wallus.de>
