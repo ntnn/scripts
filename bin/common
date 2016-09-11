@@ -3,6 +3,8 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-09-11  Fix assignment instead of defaulting on DEBUG and
+#               funcdepth
 #   2016-09-10  Added syslog-output log log()
 
 # The MIT License (MIT)
@@ -40,7 +42,7 @@ log() {
         (debug)     level=30;;
     esac
 
-    if test "$level" -le ${DEBUG:=20}; then
+    if test "$level" -le ${DEBUG:-20}; then
         output=""
         if test -n "$SH_LOG_FULLPATH"; then
             output="${output}$0"
@@ -53,7 +55,7 @@ log() {
         # in bash and zsh, but it provides useful information, so it's
         # added if available
         if test -n "$FUNCNAME"; then
-            output="${output}${FUNCNAME[${funcdepth:=1}]}():"
+            output="${output}${FUNCNAME[${funcdepth:-1}]}():"
         fi
 
         output="${output}${leveltxt}: $@"
