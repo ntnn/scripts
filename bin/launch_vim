@@ -6,6 +6,7 @@
 #   set editor='launch_vim <file> <line> <column>'
 #
 # Changelog:
+#   2016-09-21  Use '-t' instead of '-title', applies to more terminals
 
 # The MIT License (MIT)
 # Copyright (c) 2016 Nelo-T. wallus <nelo@wallus.de>
@@ -38,4 +39,4 @@ if ! command -v $EDITOR; then
     die "$EDITOR not found"
 fi
 
-$TERMINAL -title i3splitright -e tmux new-session $EDITOR +"call cursor($line, $column)" $file
+$TERMINAL -t i3splitright -e tmux new-session $EDITOR +"call cursor($line, $column)" $file
