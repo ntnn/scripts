@@ -6,6 +6,9 @@
 #   set editor='launch_vim <file> <line> <column>'
 #
 # Changelog:
+#   2016-09-21  Concatenate the string to a literal, solves issues with
+#               terminals that don't detect a parameter spanning multiple
+#               arguments
 #   2016-09-21  Use '-t' instead of '-title', applies to more terminals
 
 # The MIT License (MIT)
@@ -39,4 +42,4 @@ if ! command -v $EDITOR; then
     die "$EDITOR not found"
 fi
 
-$TERMINAL -t i3splitright -e tmux new-session $EDITOR +"call cursor($line, $column)" $file
+$TERMINAL -t i3splitright -e 'tmux new-session  '$EDITOR'  +"call cursor('$line', '$column')" '$file
