@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-10-09  Fix testing wrong fd in log()
 #   2016-10-09  Fix critical => crit
 #   2016-10-09  Add args_in function
 #   2016-09-11  Fix assignment instead of defaulting on DEBUG and
@@ -62,7 +63,7 @@ log() {
 
         output="${output}${leveltxt}: $@"
 
-        if test -n "$SH_LOG_SYSLOG" || ! test -t 1 ; then
+        if test -n "$SH_LOG_SYSLOG" || ! test -t 2 ; then
             # -p is not posix-compliant but rfc5424-compliant and bloody
             # useful
             logger -p "${SH_LOG_SYSLOG:-local0}.$leveltxt" "$output"
