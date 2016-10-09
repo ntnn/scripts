@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-10-09  Add args_in function
 #   2016-09-11  Fix assignment instead of defaulting on DEBUG and
 #               funcdepth
 #   2016-09-10  Add syslog-output log log()
@@ -73,6 +74,17 @@ log() {
 die() {
     funcdepth=2 log critical "$@, aborting"
     exit ${errno:-1}
+}
+
+# calls die if the first arguments is not:
+#   greater or equal to the second argument
+#   smaller or equal to the third argument, if passed
+args_in() {
+    test $1 -ge $2 || die "${exit_message}Not enough arguments passed"
+
+    if test $# -eq 3; then
+        test $1 -le $3 || die "${exit_message}Too many arguments passed"
+    fi
 }
 
 # useful function for wrappers
