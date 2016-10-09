@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-10-09  Fix critical => crit
 #   2016-10-09  Add args_in function
 #   2016-09-11  Fix assignment instead of defaulting on DEBUG and
 #               funcdepth
@@ -37,7 +38,7 @@ log() {
 
     # the lower the level the less output there is
     case $level in
-        (critical)  level=0;;
+        (crit)      level=0;;
         (warning)   level=10;;
         (info)      level=20;;
         (debug)     level=30;;
@@ -72,7 +73,7 @@ log() {
 }
 
 die() {
-    funcdepth=2 log critical "$@, aborting"
+    funcdepth=2 log crit "$@, aborting"
     exit ${errno:-1}
 }
 
