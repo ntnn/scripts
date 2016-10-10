@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-10-11  args_in returns proper codes instead of die'ing
 #   2016-10-09  Fix testing wrong fd in log()
 #   2016-10-09  Fix critical => crit
 #   2016-10-09  Add args_in function
@@ -78,14 +79,20 @@ die() {
     exit ${errno:-1}
 }
 
-# calls die if the first arguments is not:
-#   greater or equal to the second argument
-#   smaller or equal to the third argument, if passed
+# Returns
+#   1   if argument one is lower than argument two
+#   2   if argument one is high than argument three, if passed
+#   -1  if no or one argument has been passed
+#   -2  if four or more arguments has been passed
+#   0   otherwise
 args_in() {
-    test $1 -ge $2 || die "${exit_message}Not enough arguments passed"
+    test $# -le 1 && return -1
+    test $# -ge 4 && return -2
+
+    test $1 -ge $2 || return 1
 
     if test $# -eq 3; then
-        test $1 -le $3 || die "${exit_message}Too many arguments passed"
+        test $1 -le $3 || return 2
     fi
 }
 
