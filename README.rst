@@ -6,7 +6,7 @@ bin/
     shellscript
 
 fpath/
-    contains completions for zsh
+    contains completions and functions for zsh
 
 Each file contains a header in the following form:
 
