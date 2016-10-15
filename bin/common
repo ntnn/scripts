@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-10-15  Make awk script in next_in_path more readable
 #   2016-10-11  args_in returns proper codes instead of die'ing
 #   2016-10-09  Fix testing wrong fd in log()
 #   2016-10-09  Fix critical => crit
@@ -99,7 +100,15 @@ args_in() {
 # useful function for wrappers
 next_in_path() {
     log debug "Grabbing next path for $(basename $0)"
-    PATH=$(echo $PATH | awk 'BEGIN { RS=":" ; ORS=":" } { if ("'$(dirname $0)'" != $0) { print $0 } }') command -v $(basename $0)
+    PATH=$(echo $PATH | awk '
+        BEGIN {
+            RS=":"
+            ORS=":"
+        }
+        "'$(dirname $0)'" != $0 {
+                print $0
+        }
+        ') command -v $(basename $0)
 }
 
 now() {
