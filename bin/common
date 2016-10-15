@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-10-15  Add cat_or_exec_in
 #   2016-10-15  Make awk script in next_in_path more readable
 #   2016-10-11  args_in returns proper codes instead of die'ing
 #   2016-10-09  Fix testing wrong fd in log()
@@ -113,4 +114,68 @@ next_in_path() {
 
 now() {
     date "+%Y-%m-%d %H:%M:%S:%s"
+}
+
+__cat_or_exec_in_list_files() {
+    find $@ \
+            -type f \
+            \( \
+                -name $prefix'.conf' \
+                -o \
+                -name $prefix'.cfg' \
+            \) \
+            -exec echo conf '{}' ';' \
+            -o \
+            -name $prefix'.*' \
+            -a \
+            \( \
+                -perm -0300 \
+                -o \
+                -perm -0030 \
+                -o \
+                -perm -0003 \
+            \) \
+            -exec echo exec '{}' ';'
+}
+
+__cat_or_exec_in_print_num() {
+    args_in $# 1 1 || return -1
+    tmp=${1##*/}
+    echo ${tmp%%_*}
+}
+
+__cat_or_exec_in() {
+    __cat_or_exec_in_list_files $@ \
+        | while read type file
+        do
+            echo $(__cat_or_exec_in_print_num $file) $type $file
+        done | sort | uniq | awk '{ print $2" "$3 }'
+}
+
+cat_or_exec_in() {
+    args_in $# 1 || {
+        log warning 'At least one parameter expected for cat_or_exec_in'
+        return 1
+    }
+
+    export prefix='[0-9][0-9][0-9][0-9]_*'
+
+    __cat_or_exec_in $@ | while read type file
+    do
+        case "$type" in
+            (conf)
+                cat $file
+                ;;
+            (exec)
+                ./${file#$PWD}
+                export errno=$?
+                if test $errno -ne 0; then
+                    die "Executable '$file' failed with error code $errno"
+                fi
+                ;;
+            (*)
+                log warning "Unrecognized type '$type' of file '$file'"
+                ;;
+        esac
+    done
 }
