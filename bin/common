@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-10-16  Add mktmp
 #   2016-10-15  Add cat_or_exec_in
 #   2016-10-15  Make awk script in next_in_path more readable
 #   2016-10-11  args_in returns proper codes instead of die'ing
@@ -178,4 +179,9 @@ cat_or_exec_in() {
                 ;;
         esac
     done
+}
+
+# yields a semi-reliable value usable for temporary actions
+mktmp() {
+    echo ${TMPDIR:-/tmp}-$(basename $0)-$$-$(date +%T).tmp
 }
