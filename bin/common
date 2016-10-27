@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-10-27  Test for absolute path on cat_or_exec_in
 #   2016-10-16  Add mktmp
 #   2016-10-15  Add cat_or_exec_in
 #   2016-10-15  Make awk script in next_in_path more readable
@@ -168,7 +169,12 @@ cat_or_exec_in() {
                 cat $file
                 ;;
             (exec)
-                ./${file#$PWD}
+                if test $(expr "$file" : '^/') -eq 1; then
+                    $file
+                else
+                    ./$file
+                fi
+
                 export errno=$?
                 if test $errno -ne 0; then
                     die "Executable '$file' failed with error code $errno"
