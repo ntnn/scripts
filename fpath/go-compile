@@ -1,7 +1,15 @@
 emulate -L zsh
 
-# ZSH preexec hook. Checks for a .go file name and compiles it, if an
-# executable was not found.
+# ZSH accept-line function.
+# Does:
+#   - compiles .go files if found
+#       execute `somescript`, if a file `somescript.go` exists in the
+#       path go-compile will compile it
+#   - compiles if .go file is newer than binary
+#   - rewrites buffer from `file.go` to `file`, if needed
+#       execute `somescript.go`, go-compile rewrites the buffer dropping
+#       the '.go'
+#   - also works for relative and absolute paths
 #
 # E.g.:
 #   $ cat ~/bin/testthis.go
@@ -12,15 +20,23 @@ emulate -L zsh
 #       fmt.Println("Works")
 #   }
 #   $ autoload -Uz go-compile
-#   $ preexec_functions+=(go-compile)
+#   $ my-accept-line() { go-compile; zle accept-line }
+#   # zle -N my-accept-line
+#   # bindkey '^M' my-accept-line
 #   $ testthis
 #   Works
 #
 # zshrc:
-# autoload -Uz go-compile add-zsh-hook
-# add-zsh-hook preexec go-compile
+#   autoload -Uz go-compile
+#   my-accept-line() {
+#     go-compile
+#     zle accept-line
+#   }
+#   zle -N my-accept-line
+#   bindkey '^M' my-accept-line
 #
 # Changelog:
+#   2016-11-10  Use as accept-line hook instead of preexec hook to modify BUFFER
 #   2016-11-09  Add go-compile
 #
 # The MIT License (MIT)
@@ -44,19 +60,49 @@ emulate -L zsh
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 # OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-cmd=${3[(w)1]}
+_full_path() {
+    # return early on full or relative paths
+    case $1 in
+        (/*|./*)
+            echo $1
+            return
+            ;;
+    esac
 
+    for folder in $path; do
+        if [[ -f $folder/$1 ]]; then
+            echo $folder/$1
+            return
+        fi
+    done
+
+    return 1
+}
+
+cmd=${BUFFER[(w)1]}
+cmdline=$BUFFER
+cmdline[(w)1]=""
+
+# expand aliases
 if cmd_alias=$(alias $cmd); then
     cmd=$cmd_alias
 fi
 
-if which $cmd &>/dev/null; then
-    return
+# check for .go suffix and replace in command line to actual binary
+if [[ "${cmd##*.}" == "go" ]]; then
+    cmd=${cmd%.go}
+    BUFFER="$cmd $cmdline"
 fi
 
-for folder in $path; do
-    if [[ -f $folder/$cmd.go ]]; then
-        go build -o $folder/$cmd $folder/$cmd.go
-        return
-    fi
-done
+# ensure '.go' suffix and search for path
+gofile=$(_full_path ${cmd%.go}.go)
+[[ -z "$gofile" || ! -f $gofile ]] && return 0
+
+cmdfile=${gofile%.go}
+
+# if the gofile is older than the binary no action needs to be taken
+if [[ $gofile -ot $cmdfile ]]; then
+    return 0
+fi
+
+go build -o $cmdfile $gofile
