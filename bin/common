@@ -3,6 +3,8 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2016-11-15  Fix mktmp() appending to TMPDIR instead of writing
+#               a file under it
 #   2016-10-27  Test for absolute path on cat_or_exec_in
 #   2016-10-16  Add mktmp
 #   2016-10-15  Add cat_or_exec_in
@@ -189,5 +191,5 @@ cat_or_exec_in() {
 
 # yields a semi-reliable value usable for temporary actions
 mktmp() {
-    echo ${TMPDIR:-/tmp}-$(basename $0)-$$-$(date +%T).tmp
+    echo ${TMPDIR:-/tmp}/$(basename $0)-$$-$(date +%T).tmp
 }
