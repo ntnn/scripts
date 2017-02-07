@@ -36,6 +36,7 @@ emulate -L zsh
 #   bindkey '^M' my-accept-line
 #
 # Changelog:
+#   2017-02-07  Drop expansion, filtered above
 #   2017-02-07  Fix added space between cmd/arguments
 #   2017-02-07  Fix invalid subscript range on empty buffer
 #   2016-11-10  Use as accept-line hook instead of preexec hook to modify BUFFER
@@ -98,8 +99,8 @@ if [[ "${cmd##*.}" == "go" ]]; then
     BUFFER="${cmd}${cmdline}"
 fi
 
-# ensure '.go' suffix and search for path
-gofile=$(_full_path ${cmd%.go}.go)
+# search for path
+gofile=$(_full_path $cmd.go)
 [[ -z "$gofile" || ! -f $gofile ]] && return 0
 
 cmdfile=${gofile%.go}
