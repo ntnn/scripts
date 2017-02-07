@@ -36,6 +36,7 @@ emulate -L zsh
 #   bindkey '^M' my-accept-line
 #
 # Changelog:
+#   2017-02-07  Drop additional checks, rely on exit code of _full_path
 #   2017-02-07  Drop expansion, filtered above
 #   2017-02-07  Fix added space between cmd/arguments
 #   2017-02-07  Fix invalid subscript range on empty buffer
@@ -100,8 +101,7 @@ if [[ "${cmd##*.}" == "go" ]]; then
 fi
 
 # search for path
-gofile=$(_full_path $cmd.go)
-[[ -z "$gofile" || ! -f $gofile ]] && return 0
+gofile=$(_full_path $cmd.go) || return
 
 cmdfile=${gofile%.go}
 
