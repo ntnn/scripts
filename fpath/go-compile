@@ -36,6 +36,7 @@ emulate -L zsh
 #   bindkey '^M' my-accept-line
 #
 # Changelog:
+#   2017-02-07  Fix invalid subscript range on empty buffer
 #   2016-11-10  Use as accept-line hook instead of preexec hook to modify BUFFER
 #   2016-11-09  Add go-compile
 #
@@ -78,6 +79,8 @@ _full_path() {
 
     return 1
 }
+
+[[ "$BUFFER" =~ '^[[:space:]]*$' ]] && return 0
 
 cmd=${BUFFER[(w)1]}
 cmdline=$BUFFER
