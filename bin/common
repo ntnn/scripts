@@ -3,6 +3,8 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2017-03-24  If no stderr is attached use either notify-send or
+#               syslog
 #   2017-03-24  Flatten hierarchy of log()
 #   2016-11-15  Fix mktmp() appending to TMPDIR instead of writing
 #               a file under it
@@ -74,13 +76,23 @@ log() {
 
     output="${output}${leveltxt}: $@"
 
-    if test -n "$SH_LOG_SYSLOG" || ! test -t 2 ; then
-        # -p is not posix-compliant but rfc5424-compliant and bloody
-        # useful
-        logger -p "${SH_LOG_SYSLOG:-local0}.$leveltxt" "$output"
-    else
-        echo $output >&2
+    if ! test -t 2; then
+        # Presumable subhsell of an X session, log via notifyd
+        if test -n "$XDG_DATA_DIRS"; then
+            notify-send "$output"
+            return
+        fi
+
+        # Not a subshell of X and no stderr attached, log to syslog
+        if test -n "$SH_LOG_SYSLOG"; then
+            # -p is not posix-compliant but rfc5424-compliant and bloody
+            # useful
+            logger -p "${SH_LOG_SYSLOG:-local0}.$leveltxt" "$output"
+            return
+        fi
     fi
+
+    echo $output >&2
 }
 
 die() {
