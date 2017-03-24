@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2017-03-24  Flatten hierarchy of log()
 #   2016-11-15  Fix mktmp() appending to TMPDIR instead of writing
 #               a file under it
 #   2016-10-27  Test for absolute path on cat_or_exec_in
@@ -52,31 +53,33 @@ log() {
         (debug)     level=30;;
     esac
 
-    if test "$level" -le ${DEBUG:-20}; then
-        output=""
-        if test -n "$SH_LOG_FULLPATH"; then
-            output="${output}$0"
-        else
-            output="${output}$(basename $0)"
-        fi
-        output="${output}[$$]:"
+    if test "$level" -gt ${DEBUG:-20}; then
+        return
+    fi
 
-        # FUNCNAME is not in the posix spec and afaik only implemented
-        # in bash and zsh, but it provides useful information, so it's
-        # added if available
-        if test -n "$FUNCNAME"; then
-            output="${output}${FUNCNAME[${funcdepth:-1}]}():"
-        fi
+    output=""
+    if test -n "$SH_LOG_FULLPATH"; then
+        output="${output}$0"
+    else
+        output="${output}$(basename $0)"
+    fi
+    output="${output}[$$]:"
 
-        output="${output}${leveltxt}: $@"
+    # FUNCNAME is not in the posix spec and afaik only implemented
+    # in bash and zsh, but it provides useful information, so it's
+    # added if available
+    if test -n "$FUNCNAME"; then
+        output="${output}${FUNCNAME[${funcdepth:-1}]}():"
+    fi
 
-        if test -n "$SH_LOG_SYSLOG" || ! test -t 2 ; then
-            # -p is not posix-compliant but rfc5424-compliant and bloody
-            # useful
-            logger -p "${SH_LOG_SYSLOG:-local0}.$leveltxt" "$output"
-        else
-            echo $output >&2
-        fi
+    output="${output}${leveltxt}: $@"
+
+    if test -n "$SH_LOG_SYSLOG" || ! test -t 2 ; then
+        # -p is not posix-compliant but rfc5424-compliant and bloody
+        # useful
+        logger -p "${SH_LOG_SYSLOG:-local0}.$leveltxt" "$output"
+    else
+        echo $output >&2
     fi
 }
 
