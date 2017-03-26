@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2017-03-27  Ignore fd 2 if SH_LOG_STDERR is set
 #   2017-03-24  If no stderr is attached use either notify-send or
 #               syslog
 #   2017-03-24  Flatten hierarchy of log()
@@ -76,7 +77,7 @@ log() {
 
     output="${output}${leveltxt}: $@"
 
-    if ! test -t 2; then
+    if test -z "$SH_LOG_STDERR" && ! test -t 2; then
         # Presumable subhsell of an X session, log via notifyd
         if test -n "$XDG_DATA_DIRS"; then
             notify-send "$output"
