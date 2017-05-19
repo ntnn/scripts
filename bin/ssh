@@ -7,7 +7,6 @@
 # ssh sessions.
 #
 # Changelog:
-#   2017-03-13  Synchronize some files to remote on `ssh $remote`
 #   2016-09-11  Add term overwrite for termite
 
 # The MIT License (MIT)
@@ -44,28 +43,6 @@ case $TERM in
         export TERM="xterm"
         ;;
 esac
-
-if
-    test -t 1 \
-        && test $# -eq 1 \
-        && test -f ~/.ssh-copy.rc
-then
-    while read local remote; do
-        test -n "$local" || continue
-        test -z "$remote" && remote=$local
-
-        log debug "Syncing $local to $remote"
-        remote_dir=$(dirname $remote)
-
-        rsync \
-            --rsync-path="mkdir -p $(dirname $remote) && rsync" \
-            --archive \
-            --cvs-exclude \
-            --exclude=.git \
-            --delete \
-            ~/$local $1:~/$remote
-    done < ~/.ssh-copy.rc
-fi
 
 $(next_in_path) "$@"
 
