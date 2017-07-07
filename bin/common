@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2017-07-07  Fix invalid return codes on args_in
 #   2017-03-27  Ignore fd 2 if SH_LOG_STDERR is set
 #   2017-03-24  If no stderr is attached use either notify-send or
 #               syslog
@@ -104,12 +105,12 @@ die() {
 # Returns
 #   1   if argument one is lower than argument two
 #   2   if argument one is high than argument three, if passed
-#   -1  if no or one argument has been passed
-#   -2  if four or more arguments has been passed
+#   127 if no or one argument has been passed
+#   128 if four or more arguments has been passed
 #   0   otherwise
 args_in() {
-    test $# -le 1 && return -1
-    test $# -ge 4 && return -2
+    test $# -le 1 && return 127
+    test $# -ge 4 && return 128
 
     test $1 -ge $2 || return 1
 
