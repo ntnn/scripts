@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2017-07-07  Add arg function
 #   2017-07-07  Fix invalid return codes on args_in
 #   2017-03-27  Ignore fd 2 if SH_LOG_STDERR is set
 #   2017-03-24  If no stderr is attached use either notify-send or
@@ -117,6 +118,33 @@ args_in() {
     if test $# -eq 3; then
         test $1 -le $3 || return 2
     fi
+}
+
+# A function may take arguments in the style of `key=value`.
+# This function takes key as the first argument and an arbitrary number
+# of k/v pairs and returns the value where the key matches.
+#
+# Args
+#   <key>       Key to find in following k/v pairs
+#   [<k=v>...]  key/value pairs
+# Returns
+#   0 and echoes found value on found key
+#   1 if key was not found
+arg() {
+    key=$1
+    shift
+
+    for kv in "$@"; do
+        k="${kv%=*}"
+        v="${kv#*=}"
+
+        if test "$k" = "$key"; then
+            echo "$v"
+            return 0
+        fi
+    done
+
+    return 1
 }
 
 # useful function for wrappers
