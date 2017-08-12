@@ -8,6 +8,9 @@ bin/
 fpath/
     contains completions and functions for zsh
 
+githooks/
+    miscellaneous git hooks
+
 Each file contains a header in the following form:
 
     $description
