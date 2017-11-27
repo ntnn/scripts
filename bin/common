@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2017-11-27  Add run_as function
 #   2017-07-07  Add arg function
 #   2017-07-07  Fix invalid return codes on args_in
 #   2017-03-27  Ignore fd 2 if SH_LOG_STDERR is set
@@ -237,4 +238,15 @@ cat_or_exec_in() {
 # yields a semi-reliable value usable for temporary actions
 mktmp() {
     echo ${TMPDIR:-/tmp}/$(basename $0)-$$-$(date +%T).tmp
+}
+
+# If a script must be run as a different user this function will compare
+# the passed and current user id.
+# Should the not match sudo is used to execute the calling script.
+run_as() {
+    target_uid="${1:-0}"
+    test "$(id -u)" = "$target_uid" && return
+
+    sudo -u "#$target_uid" $0 $@
+    exit $?
 }
