@@ -3,6 +3,7 @@
 # Wrapper around tmux' various commands.
 #
 # ChangeLog:
+#   2018-02-28  Update functions for POSIX-compliance and better style
 #   2016-06-11  support switching/creating from within tmux
 #               add option to nest session
 #               add option to set pwd
@@ -47,17 +48,11 @@ case $1 in
 esac
 
 tmuxifier_has() {
-    if tmuxifier list-$1 | grep $2; then
-        return 0;
-    fi
-    return 1;
+    tmuxifier list-$1 | grep -q $2
 }
 
 session_is_attached() {
-    if tmux list-sessions | egrep "^$1:.*attached)$"; then
-        return 0;
-    fi
-    return 1;
+    tmux list-sessions | grep -Eq "^$1:.*attached)$"
 }
 
 if [ $# -eq 0 ]; then
