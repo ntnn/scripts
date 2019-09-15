@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2019-09-15  Add grab_help and die_help
 #   2017-11-27  Add run_as function
 #   2017-07-07  Add arg function
 #   2017-07-07  Fix invalid return codes on args_in
@@ -249,4 +250,105 @@ run_as() {
 
     sudo -u "#$target_uid" $0 $@
     exit $?
+}
+
+_grab_help_check_mark() {
+    target="$1"
+    mark="$2"
+
+    grep -q "# $mark" "$target"
+}
+
+_grab_help_grab_marks() {
+    target="$1"
+    mark="$2"
+
+    awk "/# $mark/ { \$1=\"\"; \$2=\"\"; print \$0; }" < "$target"
+}
+
+
+_grab_help() {
+    target="$1"
+    mark="$2"
+    category="$3"
+    [ -z "$mark" ] && die "Empty mark passed"
+    [ -z "$category" ] && die "Empty category passed"
+
+    if ! _grab_help_check_mark "$target" "$mark"; then
+        log debug "Category does not exist: $category (mark $mark)"
+        return 1
+    fi
+
+    printf "$category:\n"
+    _grab_help_grab_marks "$target" "$mark" | while read line; do
+        printf "  $line\n"
+    done
+    printf "\n"
+}
+
+# grab_help retrieves documentation from comments in a script and prints
+# it to stdout.
+#
+# This is by no means a complete solution - but it does offer quite an
+# easy way to add help output to small scripts.
+#
+# Example:
+#
+# some_script.sh:
+#   #!/usr/bin/env sh
+#
+#   . common
+#
+#   # ENV SOME_SCRIPT_GLOBAL_OPTION: An env var influencing behaviour
+#   global_option="${SOME_SCRIPT_GLOBAL_OPTION:-default_value}"
+#
+#   # DESC A short script to display grab_help
+#
+#   if [ $# -eq 0 ]; then
+#       grab_help
+#       exit
+#   fi
+#
+#   subcmd="$1"
+#   shift
+#
+#   case "$subcmd" in
+#       # SUB arg1: First subcommand
+#       (arg1) do_stuff;;
+#       # SUB arg2: Second subcommand
+#       (arg2) do_other_stuff;;
+#       (help) grab_help;;
+#       (*) die_help "Unknown subcommand: $subcmd";;
+#   esac
+#
+# Executing `./some_script.sh help` yields:
+#   A short script to display grab_help
+#
+#   Environment variables:
+#     SOME_SCRIPT_GLOBAL_OPTION: An env var influencing behaviour
+#
+#   Subcommands:
+#     arg1: First subcommand
+#     arg2: Second subcommand
+grab_help() {
+    target="$1"
+    [ ! -f "$target" ] && target="$0"
+    shift
+
+    if _grab_help_check_mark "$target" DESC; then
+        _grab_help_grab_marks "$target" DESC
+        printf "\n"
+    fi
+
+    _grab_help "$target" ENV "Environment variables"
+    _grab_help "$target" SUB Subcommands
+
+    return 0
+}
+
+die_help() {
+    printf "$@\n\n" >&2
+
+    grab_help "$0"
+    die "Invalid arguments"
 }
