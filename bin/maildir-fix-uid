@@ -5,6 +5,7 @@
 # servers. This is a brute-force method to fix it, but it works.
 #
 # Changelog:
+#   2020-07-27  Add `maildir-fix-uid fix gaps`
 #   2020-07-27  More variable safety
 #   2020-07-26  Fix typo
 
@@ -77,10 +78,32 @@ fix_duplicate_uids() {
     done
 }
 
+fix_gaps() {
+    local last=0
+
+    for uid in $(get_uids | sort -n); do
+        if test $(expr $uid - $last) = 1; then
+            # difference to previous uid is 1, no gap
+            last=$uid
+            continue
+        fi
+
+        local new_uid=$(expr $last + 1)
+        local old_path="$(get_by_uid $uid)"
+        test -f "$old_path" || continue
+        local new_path=$(echo "$old_path" | sed "s/U=$uid:/U=$new_uid:/")
+
+        log info "Moving mail '$old_path' to '$new_path'"
+        mv "$old_path" "$new_path"
+        last=$new_uid
+    done
+}
+
 case $2 in
     (fix)
         case $3 in
             (uids) fix_duplicate_uids;;
+            (gaps) fix_gaps;;
             (*) die "Unknown subcommand: $3";;
         esac
         ;;
