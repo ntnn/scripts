@@ -5,6 +5,7 @@
 # servers. This is a brute-force method to fix it, but it works.
 #
 # Changelog:
+#   2020-07-26  Fix typo
 
 # The MIT License (MIT)
 # Copyright (c) 2016 Nelo-T. wallus <nelo@wallus.de>
@@ -29,7 +30,7 @@
 
 . common
 
-test $# -gt 1 || die "Unsufficient arguments, at least path and subcommand is needed"
+test $# -gt 1 || die "Insufficient arguments, at least path and subcommand is needed"
 path=$1
 
 mails=${TMPDIR:-/tmp}/$(basename $0).tmp
