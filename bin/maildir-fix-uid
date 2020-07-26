@@ -5,6 +5,7 @@
 # servers. This is a brute-force method to fix it, but it works.
 #
 # Changelog:
+#   2020-07-27  More variable safety
 #   2020-07-26  Fix typo
 
 # The MIT License (MIT)
@@ -31,13 +32,13 @@
 . common
 
 test $# -gt 1 || die "Insufficient arguments, at least path and subcommand is needed"
-path=$1
+path="$1"
 
-mails=${TMPDIR:-/tmp}/$(basename $0).tmp
-find $path -type f -not -name '.uidvalidity'  > $mails
+mails="${TMPDIR:-/tmp}/$(basename $0).tmp"
+find "$path" -type f -not -name '.uidvalidity'  > "$mails"
 
 get_uids() {
-    cut -d= -f2 < $mails | \
+    cut -d= -f2 < "$mails" | \
         cut -d: -f1
 }
 
@@ -47,7 +48,7 @@ get_duplicate_uids() {
 
 get_by_uid() {
     test $# -eq 1 || die "No uid passed"
-    awk '/U='$1':/ { print $0 }' < $mails
+    awk '/U='$1':/ { print $0 }' < "$mails"
 }
 
 fix_duplicate_uids() {
@@ -65,10 +66,10 @@ fix_duplicate_uids() {
                 continue
             fi
 
-            new=$(echo $duplicate | sed "s/U=$uid:/U=$cur:/")
+            new=$(echo "$duplicate" | sed "s/U=$uid:/U=$cur:/")
             log info "Moving mail '$duplicate' to '$new'"
 
-            mv $duplicate $new
+            mv "$duplicate" "$new"
 
             cur=$(expr $cur + 1)
         done
