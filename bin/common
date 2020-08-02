@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2020-08-02  Add sem_* functions for in-script locking
 #   2020-01-29  Add template
 #   2019-09-15  Add grab_help and die_help
 #   2017-11-27  Add run_as function
@@ -396,5 +397,112 @@ template() {
         awk "{ $awk_repls { print \$0 }; }" "$template"
     else
         awk "{ $awk_repls { print \$0 }; }" "$template" > "$target"
+    fi
+}
+
+sem_path() {
+    [ -z "$1" ] && die "No name for semaphore passed"
+    local base_path="$TMPDIR/common-locks/"
+    mkdir -p "$base_path"
+    echo "$base_path/$1"
+}
+
+# sem_lock creates a file to act as a semaphore or mutex.
+# If the target file already exists it waits according to the `wait`
+# argument.
+#
+# If the lock cannot be acquired the functions returns a non-zero exit
+# status.
+#
+# The lock file contains the following variables as source-able shell code:
+#   msg - Abstract message
+#   script - The `$0` of the script that created the lock
+#   timestamp - The default `date` output at the creation time of the lock
+#   pid - The process ID of the process that created the lock
+#
+# wait arguments, default is -1:
+#   -1  wait indefinitely until the file can be created
+#   0   do not wait at all
+#   x   try for x seconds
+#
+# Examples:
+#   // wait indefinitely
+#   sem_lock example_lock wait=-1
+#   // only try to acquire the lock once, then return
+#   sem_lock example_lock wait=0
+#   // try to acquire the lock for at most 60s
+#   sem_lock example_lock wait=60
+#
+# Note: This is just a very barebone imitation of actual semaphores or
+# mutexes. You'll be much safer to use e.g. flock(1).
+#
+# This version is for scripts were the control flow doesn't allow
+# programs like flock(1) to work correctly - e.g. one of the limitations
+# of flock(1) is that it always needs to run a command. It cannot lock
+# a shell function for example.
+#
+# Additionally this version only accounts for exclusive locks.
+sem_lock() {
+    local lock="$(sem_path $1)"
+    shift 1
+    local dowait="$(arg wait "$@")" || dowait=-1
+
+    local tries=0
+    while true; do
+        if [ -f "$lock" ]; then
+            case "$dowait" in
+                (-1) sleep 1; continue;;
+                (0) return 1;;
+            esac
+
+            (( tries++ ))
+            [ "$tries" -gt "$dowait" ] && return 1
+
+            sleep 1
+            continue
+        fi
+
+        {
+            echo "msg='Lock created by \"$0\" at \"$(date)\" in process $$'"
+            echo "script='$0'"
+            echo "timestamp='$(date)'"
+            echo "pid='$$'"
+        } > "$lock"
+        return 0
+    done
+}
+
+# sem_locked checks if the file acting as a semaphore or mutex exists.
+# If the file does not exist sem_locked will return with a non-zero
+# return code.
+sem_locked() {
+    test -f "$(sem_path $1)"
+}
+
+# sem_release deletes the file that acts as a semaphore or mutex.
+# If the file does not exist sem_release will return with a non-zero
+# return code.
+#
+# sem_release does not check if the file was created by the current
+# process or thread.
+#
+# If the argument `mv` has a value the file is renamed with the value as
+# a suffix instead of deleted.
+# This can be used to extract information which process and script last
+# used the file for locking and at which time.
+# The path to a lock file can be retrieved using `sem_path $lockname`.
+#
+# Examples:
+#   // moves the file to /path/to/locks/example_lock.bkp
+#   sem_release example_lock mv=.bkp
+sem_release() {
+    local sem="$(sem_path $1)"
+    shift 1
+    local mv="$(arg mv "$@")"
+
+    if [ -n "$mv" ]; then
+        mv "$sem" "$sem$mv"
+    else
+        rm "$(sem_path $1)"
     fi
 }
