@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2021-01-17  Fix sem_lock erroring without explicit wait
 #   2021-01-17  Fix sem_release not working without mv suffix
 #   2020-08-02  Add sem_* functions for in-script locking
 #   2020-01-29  Add template
@@ -446,7 +447,8 @@ sem_path() {
 sem_lock() {
     local lock="$(sem_path $1)"
     shift 1
-    local dowait="$(arg wait "$@")" || dowait=-1
+    local dowait="$(arg wait "$@")"
+    [ -z "$dowait" ] && dowait=-1
 
     local tries=0
     while true; do
