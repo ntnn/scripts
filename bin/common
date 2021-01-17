@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2021-01-17  Fix sem_release not working without mv suffix
 #   2020-08-02  Add sem_* functions for in-script locking
 #   2020-01-29  Add template
 #   2019-09-15  Add grab_help and die_help
@@ -501,8 +502,8 @@ sem_release() {
     local mv="$(arg mv "$@")"
 
     if [ -n "$mv" ]; then
-        mv "$sem" "$sem$mv"
+        mv "$sem" "$sem.$mv"
     else
-        rm "$(sem_path $1)"
+        rm "$sem"
     fi
 }
