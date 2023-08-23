@@ -40,13 +40,13 @@ finish() {
 trap finish EXIT INT
 
 if test $# -ne 0; then
-    files="$@"
+    files="$*"
 else
     files="$(git status --porcelain | awk '{ print $2 }')"
 fi
 
 {
-    for file in $files; do
+    for file in "$files"; do
         test ! -d "$file" && echo "tabnew $file | Gdiff"
     done
     echo 'tabfirst | tabclose'
