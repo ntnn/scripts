@@ -47,10 +47,6 @@ case $1 in
         ;;
 esac
 
-tmuxifier_has() {
-    tmuxifier list-$1 | grep -q $2
-}
-
 session_is_attached() {
     tmux list-sessions | grep -Eq "^$1:.*attached)$"
 }
@@ -94,14 +90,6 @@ elif [ $# -eq 1 ]; then
                 fi
             fi
         fi
-
-    elif tmuxifier_has sessions $1; then
-        # if the parameter is the name of a session layout start that
-        tmuxifier load-session "$1"
-
-    elif tmuxifier_has windows $1; then
-        # if the parameter is the name of a window layout start that
-        tmuxifier load-window "$1"
 
     else
         # the parameter is not a running session nor a layout - start
