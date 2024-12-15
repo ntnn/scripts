@@ -24,14 +24,6 @@
 # OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-_loadsessions() {
-    _wanted loadsessions expl "load sessions" compadd $(tmuxifier list-sessions)
-}
-
-_loadwindows() {
-    _wanted loadwindows expl "load windows" compadd $(tmuxifier list-windows)
-}
-
 _sessions() {
     if pgrep -u $(id -u) tmux &>/dev/null; then
         _wanted sessions expl "active sessions" compadd $(tmux list-sessions | awk -F: '!/-group-/ { print $1 }')
@@ -39,9 +31,7 @@ _sessions() {
 }
 
 _alternative \
-    'sessions:session:_sessions' \
-    'loadsessions:loadsessions:_loadsessions' \
-    'loadwindows:loadwindows:_loadwindows'
+    'sessions:session:_sessions'
 
 _arguments \
     '-c[pwd for new windows]:filename:_dirs' \
