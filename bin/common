@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2025-02-03  Allow log level names critical and warn
 #   2025-02-03  Add filter_path and update next_in_path to handle
 #               symlinks
 #   2021-01-17  Fix sem_lock erroring without explicit wait
@@ -59,11 +60,11 @@ log() {
     shift
 
     # the lower the level the less output there is
-    case $level in
-        (crit)      level=0;;
-        (warning)   level=10;;
-        (info)      level=20;;
-        (debug)     level=30;;
+    case "$level" in
+        (crit|critical) level=0;;
+        (warn|warning)  level=10;;
+        (info)          level=20;;
+        (debug)         level=30;;
     esac
 
     if test "$level" -gt ${DEBUG:-20}; then
