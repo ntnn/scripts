@@ -3,6 +3,7 @@
 # Common functions useful for scripts
 #
 # Changelog:
+#   2025-02-04  Fix filter_path using `echo -n`
 #   2025-02-03  Allow log level names critical and warn
 #   2025-02-03  Add filter_path and update next_in_path to handle
 #               symlinks
@@ -159,7 +160,7 @@ arg() {
 filter_path() {
     echo $PATH | while read -d: p; do
         [ "$p" = "$1" ] && continue
-        echo -n "$p:"
+        printf "$p:"
     done
 }
 
