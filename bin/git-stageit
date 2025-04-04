@@ -12,6 +12,7 @@
 #
 # Changelog:
 #   2023-12-04 Fix passing filepaths with spaces
+#   2025-04-04 Allow filtering changed files by pattern
 
 # The MIT License (MIT)
 # Copyright (c) 2016 Nelo-T. wallus <nelo@wallus.de>
@@ -40,14 +41,24 @@ finish() {
 }
 trap finish EXIT INT
 
-if test $# -ne 0; then
-    files="$@"
-else
-    files="$(git status --porcelain | awk '{ print $2 }')"
-fi
+_changed_files() {
+    git status --porcelain | grep "$1" | awk '{ print $2 }'
+}
+
+changed_files() {
+    if test $# -eq 0; then
+        _changed_files "^[ M]"
+        return
+    fi
+
+    for f in "$@"; do
+        _changed_files "$f"
+    done
+}
+
 
 {
-    for file in $files; do
+    changed_files "$@" | while read file; do
         test ! -d "$file" && echo "tabnew $file | Gdiff"
     done
     echo 'tabfirst | tabclose'
