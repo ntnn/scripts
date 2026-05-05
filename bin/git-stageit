@@ -42,24 +42,23 @@ finish() {
 trap finish EXIT INT
 
 _changed_files() {
-    git status --porcelain | grep "$1" | awk '{ print $2 }'
+    git status --porcelain=v2 --no-renames | grep '^1 .M' | cut -d' ' -f9-
 }
 
 changed_files() {
     if test $# -eq 0; then
-        _changed_files "^[ M]"
+        _changed_files
         return
     fi
 
     for f in "$@"; do
-        _changed_files "$f"
+        _changed_files | grep "$f"
     done
 }
 
-
 {
     changed_files "$@" | while read file; do
-        test ! -d "$file" && echo "tabnew $file | Gdiff"
+        echo "tabnew $file | Gdiffsplit"
     done
     echo 'tabfirst | tabclose'
 } > $commandfile
